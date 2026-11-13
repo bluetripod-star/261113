@@ -71,12 +71,20 @@ h1{margin:4px 0 0;font-size:26px;line-height:1.3}
 .btn{flex:1;font:inherit;font-size:15px;border-radius:12px;padding:13px 14px;cursor:pointer;border:1px solid var(--line);background:var(--glass);color:var(--ink)}
 .btn.main{background:var(--amber);border-color:var(--amber);color:var(--amber-ink);font-weight:700}
 footer{margin-top:22px;color:var(--sub);font-size:12px}
-@media (prefers-reduced-motion:reduce){#stage,.star{animation:none}.bar i{transition:none}}
+#intro{position:fixed;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+#intro p{margin:0;font-size:30px;font-weight:700;line-height:1.6;opacity:0;animation:hello 3.4s ease both}
+#intro p span{display:block}
+#intro p span+span{font-size:22px;font-weight:500;color:var(--amber);margin-top:6px}
+@keyframes hello{0%{opacity:0;transform:translateY(8px)}28%{opacity:1;transform:none}72%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-6px)}}
+main{transition:opacity .7s ease}
+body.intro main{opacity:0;visibility:hidden}
+@media (prefers-reduced-motion:reduce){#stage,.star{animation:none}.bar i{transition:none}#intro p{animation-duration:2s}}
 @media (max-width:420px){.t{flex-basis:84px}.q,.rtitle{font-size:22px}}
 </style>
 </head>
-<body>
+<body class="intro">
 <div id="sky" aria-hidden="true"><div class="moon"></div></div>
+<div id="intro" role="status"><p><span>안녕!</span><span>우리 토요일에 뭐할까요?</span></p></div>
 <main>
   <header>
     <p class="eyebrow" id="dateLabel"></p>
@@ -188,15 +196,15 @@ function build(){
   }
 
   if(morning==='namsan'){
-    push('10:00','명동역 집합','4호선, 서울역에서 2정거장이에요. 케이블카 승강장이 명동역 인근에 있어요.');
+    push('10:00','명동에서 만나요','4호선, 서울역에서 2정거장이에요. 케이블카 승강장이 명동역 인근에 있어요.');
     push('10:15~12:00','케이블카로 남산 정상','약 3분이면 올라가요. 10시 운행 시작에 맞추세요.'+(weekend?' 주말은 대기가 길 수 있어요.':'')+' N서울타워 주변을 산책하고 전망을 봐요.');
     push('12:00~13:00','해방촌으로 이동',walk==='low'?'택시로 이동해요. 약 10~15분이에요.':'소월길로 걸어 내려와요. 내리막이고 약 30~40분이에요. 추우면 택시를 타세요.');
   }else if(morning==='alley'){
-    push('10:30','숙대입구역 집합','4호선, 서울역 다음 역이에요.');
+    push('10:30','숙대입구역에서 만나요','4호선, 서울역 다음 역이에요.');
     push('10:45~12:30','후암동 골목 구경',walk==='low'?'킷테(적산가옥 카페)와 독립서점 스토리지북앤필름 위주로 짧게 돌아요.':'킷테(적산가옥 카페), 지월장, 독립서점 스토리지북앤필름, 후암동 108계단을 걸어요. 갤러리는 전시마다 운영시간이 달라 확인이 필요해요.');
     push('12:30~13:00','해방촌 방향으로 이동',walk==='high'?'신흥시장 쪽으로 걸어 올라가요. 오르막이 있어요.':'택시로 이동해요. 약 5~10분이에요.');
   }else{
-    push('10:00','서울역 집합');
+    push('10:00','서울역에서 만나요');
     push('10:10~11:00','문화역서울284',festival?'오늘전통축제(11/12~15) 기간이에요. 팝업스토어와 전시를 볼 수 있어요. 운영시간은 확인해 주세요.':'전시가 없는 날은 휴관일 수 있어요. 방문 전 일정을 확인해 주세요.');
     push('11:00~11:40','서울역 옥상정원과 서울로7017',walk==='low'?'옥상정원 위주로 가볍게 봐요.':'옥상정원에서 서울로7017로 이어서 걸어요.');
     push('11:40~12:30','남대문시장 구경','시장은 오전에 보는 게 좋아요.'+(walk==='low'?' 입구 쪽만 가볍게 봐요.':''));
@@ -216,7 +224,7 @@ function build(){
 
   push(cafeStart+'~15:10','해방촌 카페와 소품 구경','해방공원 루프탑 카페(신흥로 95-7), 해방촌 빈가게(소월로20길 27, 동네 작가 수제 물품도 있어요), 빌라커피바(신흥로 101-9 2층, 영업 확인 필요) 중에서 골라요.');
   push('15:10~15:50','서울역 쪽으로 이동',walk==='high'?'후암동을 거쳐 걸어요. 약 30분이에요.':'택시로 이동해요. 약 10분이에요.');
-  push('16:00~20:00','집냥이 하러 갈 곳','서울역 근처에 예약해 둔 곳이에요.',true);
+  push('16:00~20:00','뒹굴뒹굴 집냥이','서울역 근처에요.',true);
 
   if(night==='seoulro'){
     push('20:10~21:00','서울로7017 야간 산책','수국전망대에서 서울역 야경을 보고, 만리동광장 방면 서쪽 구간에서 미디어아트를 봐요. 11월 밤은 쌀쌀하니 30~40분 정도로 짧게 걸으세요.');
@@ -316,6 +324,7 @@ function drawSky(){
 $('#dateLabel').textContent=DATE.slice(0,4)+'년 '+fmtDate();
 drawSky();
 show();
+setTimeout(()=>{document.body.classList.remove('intro');$('#intro').remove()},3400);
 </script>
 </body>
 </html>
