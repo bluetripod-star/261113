@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>서울역 데이트 코스 메이커</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1f2328;--sub:#6b7076;--line:#e4e0d8;--accent:#2f5d50;--soft:#e3eee9;--warn:#fff4e0;--warnink:#8a5a00}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;line-height:1.6}
+main{max-width:640px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:22px;margin:8px 0 4px}
+.lead{color:var(--sub);margin:0 0 20px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.q{font-weight:700;margin:0 0 10px;font-size:15px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:block;position:relative}
+.opt input{position:absolute;opacity:0}
+.opt span{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;cursor:pointer}
+.opt small{display:block;color:var(--sub);font-size:12px}
+.opt input:checked+span{border-color:var(--accent);background:var(--soft)}
+.opt input:focus-visible+span{outline:2px solid var(--accent)}
+input[type=date],input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit}
+#pizzaWrap{margin-top:8px}
+.hide{display:none}
+button{font-family:inherit;font-size:15px;border:0;border-radius:10px;padding:12px 16px;cursor:pointer}
+.primary{background:var(--accent);color:#fff;width:100%}
+.ghost{background:#fff;border:1px solid var(--line);color:var(--ink);flex:1}
+.row{display:flex;gap:8px;margin-top:12px}
+.warn{background:var(--warn);color:var(--warnink);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:8px}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.tl li:last-child{border-bottom:0}
+.t{flex:0 0 96px;font-weight:700;font-size:13px;color:var(--accent)}
+.fixed .t{color:#9a3b2e}
+.b strong{display:block;font-size:15px}
+.b span{font-size:13px;color:var(--sub)}
+footer{color:var(--sub);font-size:12px;margin-top:16px}
+</style>
+</head>
+<body>
+<main>
+  <h1>서울역 데이트 코스 메이커</h1>
+  <p class="lead">16:00~20:00 서울역 근처 공간 예약을 기준으로, 전후 시간을 채워 드려요.</p>
+  <form id="f" onsubmit="return false">
+    <div class="card">
+      <p class="q">1. 데이트 날짜</p>
+      <input type="date" id="date" value="2026-11-14">
+    </div>
+    <div id="qs"></div>
+    <button class="primary" type="button" id="go">코스 만들기</button>
+  </form>
+  <div id="out" style="margin-top:16px"></div>
+  <footer>운영시간과 행사 일정은 바뀔 수 있어요. 출발 전에 각 장소의 최신 정보를 확인해 주세요.</footer>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const val=n=>(document.querySelector('input[name="'+n+'"]:checked')||{}).value;
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
+
+const Q=[
+ {n:'morning',q:'2. 낮에 뭘 하고 싶나요?',o:[
+  ['namsan','남산 산책과 전망','케이블카로 올라가 걷고 해방촌으로 내려와요'],
+  ['alley','후암동·해방촌 골목과 로컬숍','적산가옥 카페, 독립서점, 신흥시장'],
+  ['seoul','서울역권 전시와 쇼핑','문화역서울284, 서울로7017, 남대문시장']]},
+ {n:'walk',q:'3. 걷는 양은 어느 정도가 좋나요?',o:[
+  ['high','많이 걸어도 좋아요','도보 위주'],
+  ['mid','적당히','필요하면 택시'],
+  ['low','최소로','택시 위주']]},
+ {n:'lunch',q:'4. 늦은 점심은 어디서 먹을까요?',o:[
+  ['ssoul','서울앤쏘울','신흥로 97-5 1층 와인바'],
+  ['mersin','메르신 케밥','신흥로 84 1층'],
+  ['pizza','피자집','이름을 직접 적어 주세요']]},
+ {n:'night',q:'5. 20시 이후에는 뭘 할까요?',o:[
+  ['seoulro','서울로7017 야경 산책','공간에서 가까워요'],
+  ['namsan','남산 야경','명동역에서 케이블카'],
+  ['wine','서울앤쏘울 와인 2차','24시까지 영업'],
+  ['home','바로 귀가','']]}
+];
+
+Q.forEach(q=>{
+  const c=el('div','card');c.appendChild(el('p','q',q.q));
+  const w=el('div','opts');
+  q.o.forEach((o,i)=>{
+    const l=el('label','opt');
+    const r=document.createElement('input');r.type='radio';r.name=q.n;r.value=o[0];if(i===0)r.checked=true;
+    const s=el('span','',o[1]);if(o[2])s.appendChild(el('small','',o[2]));
+    l.appendChild(r);l.appendChild(s);w.appendChild(l);
+  });
+  c.appendChild(w);
+  if(q.n==='lunch'){
+    const pw=el('div','hide');pw.id='pizzaWrap';
+    const t=document.createElement('input');t.type='text';t.id='pizza';t.placeholder='피자집 이름';
+    pw.appendChild(t);c.appendChild(pw);
+  }
+  $('#qs').appendChild(c);
+});
+document.addEventListener('change',e=>{
+  if(e.target.name==='lunch')$('#pizzaWrap').classList.toggle('hide',e.target.value!=='pizza');
+});
+
+function build(){
+  const date=$('#date').value;
+  if(!date){alert('날짜를 선택해 주세요.');return null}
+  const dow=new Date(date+'T00:00:00').getDay();
+  const day='일월화수목금토'[dow];
+  const weekend=dow===0||dow===6;
+  const festival=date>='2026-11-12'&&date<='2026-11-15';
+  const morning=val('morning'),walk=val('walk');
+  let lunch=val('lunch'),night=val('night');
+  const pizza=(($('#pizza')||{}).value||'').trim()||'피자집';
+  const warns=[],it=[];
+  const push=(t,title,d,fixed)=>it.push({t:t,title:title,d:d||'',fixed:!!fixed});
+
+  if(lunch==='ssoul'&&!weekend){
+    warns.push(day+'요일에는 서울앤쏘울이 '+(dow===1?'정기휴무예요.':'16시에 열어서 점심이 어려워요.')+' 점심은 메르신 케밥으로 바꿨어요.'+(dow===1?'':' 서울앤쏘울은 20시 이후 2차로 넣어 보세요.'));
+    lunch='mersin';
+  }
+  if(night==='wine'&&dow===1){
+    warns.push('월요일은 서울앤쏘울이 쉬는 날이라 20시 이후 일정을 서울로7017 산책으로 바꿨어요.');
+    night='seoulro';
+  }
+
+  // 오전
+  if(morning==='namsan'){
+    push('10:00','명동역 집합','4호선, 서울역에서 2정거장이에요. 케이블카 승강장이 명동역 인근에 있어요.');
+    push('10:15~12:00','케이블카로 남산 정상','약 3분이면 올라가요. 10시 운행 시작에 맞추세요.'+(weekend?' 주말은 대기가 길 수 있어요.':'')+' N서울타워 주변을 산책하고 전망을 봐요.');
+    push('12:00~13:00','해방촌으로 이동',walk==='low'?'택시로 이동해요. 약 10~15분이에요.':'소월길로 걸어 내려와요. 내리막이고 약 30~40분이에요. 추우면 택시를 타세요.');
+  }else if(morning==='alley'){
+    push('10:30','숙대입구역 집합','4호선, 서울역 다음 역이에요.');
+    push('10:45~12:30','후암동 골목 구경',walk==='low'?'킷테(적산가옥 카페)와 독립서점 스토리지북앤필름 위주로 짧게 돌아요.':'킷테(적산가옥 카페), 지월장, 독립서점 스토리지북앤필름, 후암동 108계단을 걸어요. 갤러리는 전시마다 운영시간이 달라 확인이 필요해요.');
+    push('12:30~13:00','해방촌 방향으로 이동',walk==='high'?'신흥시장 쪽으로 걸어 올라가요. 오르막이 있어요.':'택시로 이동해요. 약 5~10분이에요.');
+  }else{
+    push('10:00','서울역 집합');
+    push('10:10~11:00','문화역서울284',festival?'오늘전통축제(11/12~15) 기간이에요. 팝업스토어와 전시를 볼 수 있어요. 운영시간은 확인해 주세요.':'전시가 없는 날은 휴관일 수 있어요. 방문 전 일정을 확인해 주세요.');
+    push('11:00~11:40','서울역 옥상정원과 서울로7017',walk==='low'?'옥상정원 위주로 가볍게 봐요.':'옥상정원에서 서울로7017로 이어서 걸어요.');
+    push('11:40~12:30','남대문시장 구경','시장은 오전에 보는 게 좋아요.'+(walk==='low'?' 입구 쪽만 가볍게 봐요.':''));
+    push('12:30~13:00','해방촌으로 이동','택시나 버스로 약 15분이에요.');
+  }
+
+  // 점심
+  let cafeStart='14:15';
+  if(lunch==='ssoul'){
+    push('13:00~14:15','점심: 서울앤쏘울','신흥로 97-5 1층 와인바예요. 토·일은 13시에 열어요. 전화나 인스타그램 DM으로 예약해 두세요.');
+  }else if(lunch==='mersin'){
+    push('13:00~13:30','해방촌 오거리 주변 구경','웨이팅을 피하려고 점심은 13:30 이후로 잡았어요.');
+    push('13:30~14:30','점심: 메르신 케밥','신흥로 84 1층이에요. 가게가 아담해서 웨이팅이 있을 수 있어요.');
+    cafeStart='14:30';
+  }else{
+    push('13:00~14:15','점심: '+pizza,'예약과 웨이팅 여부를 미리 확인해 주세요.');
+  }
+
+  push(cafeStart+'~15:10','해방촌 카페와 소품 구경','해방공원 루프탑 카페(신흥로 95-7), 해방촌 빈가게(소월로20길 27, 동네 작가 수제 물품도 있어요), 빌라커피바(신흥로 101-9 2층, 영업 확인 필요) 중에서 골라요.');
+  push('15:10~15:50','서울역 쪽으로 이동',walk==='high'?'후암동을 거쳐 걸어요. 약 30분이에요.':'택시로 이동해요. 약 10분이에요.');
+  push('16:00~20:00','프라이빗 공간 이용','서울역 근처 예약 공간이에요.',true);
+
+  // 밤
+  if(night==='seoulro'){
+    push('20:10~21:00','서울로7017 야간 산책','수국전망대에서 서울역 야경을 보고, 만리동광장 방면 서쪽 구간에서 미디어아트를 봐요. 11월 밤은 쌀쌀하니 30~40분 정도로 짧게 걸으세요.');
+  }else if(night==='namsan'){
+    push('20:10~21:40','남산 야경','4호선으로 서울역에서 명동역까지 가서 케이블카를 타요. 운행은 23시까지예요. 정상은 더 추우니 방한 준비를 하세요.');
+  }else if(night==='wine'){
+    push('20:10~22:00','해방촌 와인 2차: 서울앤쏘울','택시로 약 10분이에요. 24시까지 영업하고 예약을 권장해요. 막차 시간을 확인하세요.');
+  }else{
+    push('20:00','귀가','서울역에서 바로 귀가해요.');
+  }
+  return {title:date+' ('+day+') 데이트 코스',items:it,warns:warns};
+}
+
+function copyText(r){
+  const t=r.title+'\n\n'+r.items.map(i=>i.t+'  '+i.title+(i.d?' - '+i.d:'')).join('\n');
+  if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>alert('복사했어요.'),()=>prompt('복사해서 사용하세요',t))}
+  else prompt('복사해서 사용하세요',t);
+}
+
+function render(r){
+  const out=$('#out');out.innerHTML='';
+  r.warns.forEach(w=>out.appendChild(el('div','warn',w)));
+  const card=el('div','card');card.appendChild(el('p','q',r.title));
+  const ul=el('ul','tl');
+  r.items.forEach(i=>{
+    const li=el('li',i.fixed?'fixed':'');
+    li.appendChild(el('div','t',i.t));
+    const b=el('div','b');b.appendChild(el('strong','',i.title));
+    if(i.d)b.appendChild(el('span','',i.d));
+    li.appendChild(b);ul.appendChild(li);
+  });
+  card.appendChild(ul);
+  const row=el('div','row');
+  const c=el('button','ghost','텍스트로 복사');c.type='button';c.onclick=()=>copyText(r);
+  const a=el('button','ghost','다시 고르기');a.type='button';a.onclick=()=>{out.innerHTML='';window.scrollTo({top:0,behavior:'smooth'})};
+  row.appendChild(c);row.appendChild(a);card.appendChild(row);
+  out.appendChild(card);
+  out.scrollIntoView({behavior:'smooth'});
+}
+
+$('#go').onclick=()=>{const r=build();if(r)render(r)};
+</script>
+</body>
+</html>
